@@ -17,9 +17,11 @@ export const GET = async (req: Request) => {
     const requestUrl = new URL(req.url);
     const { auction } = validatedAuctionQueryParam(requestUrl);
 
+
     const baseHref = new URL(
       `/api/actions/place-bid?auction=${auction.toBase58()}`,
-      requestUrl.origin,
+      // requestUrl.origin,
+      'https://solana-action-place-bid-49210566320.us-central1.run.app',
     ).toString();
 
     const payload: ActionGetResponse = {
