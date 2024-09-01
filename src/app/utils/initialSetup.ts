@@ -1,5 +1,6 @@
-import { AnchorProvider, BN, Program, Provider, Wallet } from "@coral-xyz/anchor"
-import { ComputeBudgetProgram, Connection, Keypair, PublicKey, Signer, TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor"
+import * as anchor from "@coral-xyz/anchor"
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import IDL from '../idl/ah-idl.json';
 import { AuctionHouse } from '../idl/type';
 import { fetchTreeConfigFromSeeds, getAssetWithProof, mplBubblegum } from "@metaplex-foundation/mpl-bubblegum";
@@ -75,7 +76,7 @@ export const initialSetup = async () => {
   const umi = createUmi(RPC, { commitment: COMMITMENT }).use(mplBubblegum());
 
   const wallet = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(WALLET)));
-  const provider = new AnchorProvider(connection, new Wallet(wallet));
+  const provider = new AnchorProvider(connection, new anchor.Wallet(wallet));
   const program = new Program(IDL as AuctionHouse, provider)
 
   const [config] = PublicKey.findProgramAddressSync(
@@ -89,7 +90,8 @@ export const initialSetup = async () => {
     "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
   );
 
-  const mintDecimals = (await getMint(connection, usdcDevMint)).decimals
+  const mintData = await getMint(connection, usdcDevMint)
+  const mintDecimals = Math.pow(10, mintData.decimals)
 
   return {
     wallet,

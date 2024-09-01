@@ -26,6 +26,7 @@ export const GET = async (req: Request) => {
     const { description, img, links } = await getMplData(connection, umi, assetId)
 
     const placeholderImg = 'https://lh3.googleusercontent.com/mSOpg5plu1vHpJXMKGSAFkJW3DTOlvRzxOSGGlFfsnSccVCKHGYZ07egWJYxLRCbfFrVY2_oMK6Chj0sBSMgl1g_ig5ZZHNML-Qbdso=w609'
+    const date = new Date(endTime * 1000)
 
     const baseHref = new URL(
       `/api/actions/place-bid?auction=${auction.toBase58()}`,
@@ -38,7 +39,7 @@ export const GET = async (req: Request) => {
       icon: img ? img : placeholderImg,
       description: ` ${description} - 
       Current Price: ${price} - 
-      End time: ${new Date(endTime).toDateString()} - 
+      End time: ${date.toLocaleString()} -
       cNFT Asset ID: ${assetId.toBase58()} - 
       Links: ${links}`,
       label: 'Place bid', // this value will be ignored since `links.actions` exists
