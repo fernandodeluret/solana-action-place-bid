@@ -17,7 +17,7 @@ export const validateAuction = async (auction: PublicKey) => {
   }
 
   let price = auctionData.initialPrice.toNumber()
-  if (auctionData.currentPrice) {
+  if (auctionData.currentPrice.toNumber() > price) {
     price = auctionData.currentPrice.toNumber()
   }
   // Set the proper price scale
