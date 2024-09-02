@@ -87,7 +87,7 @@ export const POST = async (req: Request) => {
     const { bidAmount } = validatedBidAmountQueryParam(requestUrl);
 
     const { auctionData } = await validateAuction(auction)
-    const { program, mintDecimals, usdcDevMint, config, feesTreasury } = await initialSetup()
+    const { program, mintDecimals, usdcDevMint, config, feesTreasury, connection } = await initialSetup()
 
     const body: ActionPostRequest = await req.json();
 
@@ -141,7 +141,13 @@ export const POST = async (req: Request) => {
       })
       .instruction()
 
-    const transaction = new Transaction().add(ix)
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    const transaction = new Transaction({
+      feePayer: bidder,
+      blockhash,
+      lastValidBlockHeight,
+    }).add(ix);
+
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {
