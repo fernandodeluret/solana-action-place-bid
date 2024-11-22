@@ -97,7 +97,7 @@ export const POST = async (req: Request) => {
     const { auction } = validatedAuctionQueryParam(requestUrl);
     const { bidAmount } = validatedBidAmountQueryParam(requestUrl);
 
-    const { auctionData } = await validateAuction(auction);
+    const { auctionData, price } = await validateAuction(auction);
     const {
       program,
       mintDecimals,
@@ -105,7 +105,12 @@ export const POST = async (req: Request) => {
       config,
       feesTreasury,
       connection,
+      configData,
     } = await initialSetup();
+
+    if (bidAmount < configData.sellerFeeBasisPoints + price) {
+      throw new Error("bid amount is too low");
+    }
 
     const body: ActionPostRequest = await req.json();
 
@@ -201,6 +206,6 @@ function validatedBidAmountQueryParam(requestUrl: URL) {
   if (bidAmount) {
     return { bidAmount: parseFloat(bidAmount) };
   } else {
-    throw "Invalid input query parameter: auction";
+    throw "Invalid input query parameter: amount";
   }
 }
