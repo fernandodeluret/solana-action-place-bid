@@ -1,40 +1,52 @@
-import { getEnvOrError, getMplData, initialSetup } from '@/app/utils/initialSetup';
-import { validateAuction } from '@/app/utils/validateAuction';
-import { BN } from '@coral-xyz/anchor';
+import {
+  getEnvOrError,
+  getMplData,
+  initialSetup,
+} from "@/app/utils/initialSetup";
+import { validateAuction } from "@/app/utils/validateAuction";
+import { BN } from "@coral-xyz/anchor";
 import {
   ActionPostResponse,
   createPostResponse,
   ActionGetResponse,
   ActionPostRequest,
   createActionHeaders,
-} from '@solana/actions';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token';
+} from "@solana/actions";
 import {
-  PublicKey,
-  Transaction,
-} from '@solana/web3.js';
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { PublicKey, Transaction } from "@solana/web3.js";
 
 const headers = createActionHeaders();
 
 export const GET = async (req: Request) => {
   try {
     const requestUrl = new URL(req.url);
-    const { SERVER_URL } = getEnvOrError()
+    const { SERVER_URL } = getEnvOrError();
     const { auction } = validatedAuctionQueryParam(requestUrl);
-    const { price, endTime, assetId, auctionData } = await validateAuction(auction)
-    const { connection, umi } = await initialSetup()
-    const { description, img, links } = await getMplData(connection, umi, assetId)
+    const { price, endTime, assetId, auctionData } = await validateAuction(
+      auction
+    );
+    const { connection, umi } = await initialSetup();
+    const { description, img, links } = await getMplData(
+      connection,
+      umi,
+      assetId
+    );
 
-    const placeholderImg = 'https://lh3.googleusercontent.com/mSOpg5plu1vHpJXMKGSAFkJW3DTOlvRzxOSGGlFfsnSccVCKHGYZ07egWJYxLRCbfFrVY2_oMK6Chj0sBSMgl1g_ig5ZZHNML-Qbdso=w609'
-    const date = new Date(endTime * 1000)
+    const placeholderImg =
+      "https://lh3.googleusercontent.com/mSOpg5plu1vHpJXMKGSAFkJW3DTOlvRzxOSGGlFfsnSccVCKHGYZ07egWJYxLRCbfFrVY2_oMK6Chj0sBSMgl1g_ig5ZZHNML-Qbdso=w609";
+    const date = new Date(endTime * 1000);
 
     const baseHref = new URL(
       `/api/actions/place-bid?auction=${auction.toBase58()}`,
-      SERVER_URL,
+      SERVER_URL
     ).toString();
 
     const payload: ActionGetResponse = {
-      type: 'action',
+      type: "action",
       title: `Place bid to auction: ${auction.toBase58()}`,
       icon: img ? img : placeholderImg,
       description: ` ${description}
@@ -42,16 +54,16 @@ Current Price: ${price} USDC.
 End time: ${date.toLocaleString()}
 cNFT Asset ID: ${assetId.toBase58()}
 Links: ${links}`,
-      label: 'Place bid', // this value will be ignored since `links.actions` exists
+      label: "Place bid", // this value will be ignored since `links.actions` exists
       links: {
         actions: [
           {
-            label: 'Place Bid',
+            label: "Place Bid",
             href: `${baseHref}&amount={amount}`,
             parameters: [
               {
-                name: 'amount', // parameter name in the `href` above
-                label: 'Enter the amount of USDC for the bid',
+                name: "amount", // parameter name in the `href` above
+                label: "Enter the amount of USDC for the bid",
                 required: true,
               },
             ],
@@ -65,8 +77,8 @@ Links: ${links}`,
     });
   } catch (err) {
     console.log(err);
-    let message = 'An unknown error occurred';
-    if (typeof err == 'string') message = err;
+    let message = "An unknown error occurred";
+    if (typeof err == "string") message = err;
     return new Response(message, {
       status: 400,
       headers,
@@ -74,11 +86,9 @@ Links: ${links}`,
   }
 };
 
-
 export const OPTIONS = async (_req: Request) => {
   return new Response(null, { headers });
 };
-
 
 export const POST = async (req: Request) => {
   try {
@@ -86,8 +96,15 @@ export const POST = async (req: Request) => {
     const { auction } = validatedAuctionQueryParam(requestUrl);
     const { bidAmount } = validatedBidAmountQueryParam(requestUrl);
 
-    const { auctionData } = await validateAuction(auction)
-    const { program, mintDecimals, usdcDevMint, config, feesTreasury, connection } = await initialSetup()
+    const { auctionData } = await validateAuction(auction);
+    const {
+      program,
+      mintDecimals,
+      usdcDevMint,
+      config,
+      feesTreasury,
+      connection,
+    } = await initialSetup();
 
     const body: ActionPostRequest = await req.json();
 
@@ -102,16 +119,12 @@ export const POST = async (req: Request) => {
       });
     }
 
-
     const priceEscrow = getAssociatedTokenAddressSync(
       usdcDevMint,
       auction,
-      true,
+      true
     );
-    const priceOrigin = getAssociatedTokenAddressSync(
-      usdcDevMint,
-      bidder,
-    );
+    const priceOrigin = getAssociatedTokenAddressSync(usdcDevMint, bidder);
 
     let previousBidderId = program.programId;
     let previousBidderPriceWithdrawal = program.programId;
@@ -119,35 +132,34 @@ export const POST = async (req: Request) => {
       previousBidderId = auctionData.bidder;
       previousBidderPriceWithdrawal = getAssociatedTokenAddressSync(
         usdcDevMint,
-        previousBidderId,
+        previousBidderId
       );
     }
 
     const ix = await program.methods
       .placeBid({
-        bidPrice: new BN(bidAmount * mintDecimals)
+        bidPrice: new BN(bidAmount * mintDecimals),
       })
       .accountsStrict({
         auction,
         buyer: bidder,
         priceEscrow,
         priceOrigin,
-        previousBidderId,
         previousBidderPriceWithdrawal,
         config,
         feesTreasury: feesTreasury,
         tokenProgram: TOKEN_PROGRAM_ID,
         associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       })
-      .instruction()
+      .instruction();
 
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } =
+      await connection.getLatestBlockhash();
     const transaction = new Transaction({
       feePayer: bidder,
       blockhash,
       lastValidBlockHeight,
     }).add(ix);
-
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {
@@ -161,8 +173,8 @@ export const POST = async (req: Request) => {
     });
   } catch (err) {
     console.log(err);
-    let message = 'An unknown error occurred';
-    if (typeof err == 'string') message = err;
+    let message = "An unknown error occurred";
+    if (typeof err == "string") message = err;
     return new Response(message, {
       status: 400,
       headers,
@@ -172,22 +184,22 @@ export const POST = async (req: Request) => {
 
 function validatedAuctionQueryParam(requestUrl: URL) {
   try {
-    const auction = requestUrl.searchParams.get('auction');
+    const auction = requestUrl.searchParams.get("auction");
     if (auction) {
-      return { auction: new PublicKey(auction) }
+      return { auction: new PublicKey(auction) };
     } else {
-      throw 'Invalid input query parameter: auction';
+      throw "Invalid input query parameter: auction";
     }
   } catch (err) {
-    throw 'Invalid input query parameter: auction';
+    throw "Invalid input query parameter: auction";
   }
 }
 
 function validatedBidAmountQueryParam(requestUrl: URL) {
-  const bidAmount = requestUrl.searchParams.get('amount');
+  const bidAmount = requestUrl.searchParams.get("amount");
   if (bidAmount) {
-    return { bidAmount: parseFloat(bidAmount) }
+    return { bidAmount: parseFloat(bidAmount) };
   } else {
-    throw 'Invalid input query parameter: auction';
+    throw "Invalid input query parameter: auction";
   }
 }
