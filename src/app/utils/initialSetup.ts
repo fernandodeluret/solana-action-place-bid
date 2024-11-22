@@ -112,5 +112,6 @@ export const initialSetup = async () => {
     mintDecimals,
     feesTreasury: configData.feesTreasury,
     umi,
+    configData,
   };
 };

@@ -29,7 +29,7 @@ export const GET = async (req: Request) => {
     const { price, endTime, assetId, auctionData } = await validateAuction(
       auction
     );
-    const { connection, umi } = await initialSetup();
+    const { connection, umi, configData } = await initialSetup();
     const { description, img, links } = await getMplData(
       connection,
       umi,
@@ -49,10 +49,11 @@ export const GET = async (req: Request) => {
       type: "action",
       title: `Place bid to auction: ${auction.toBase58()}`,
       icon: img ? img : placeholderImg,
-      description: ` ${description}
-Current Price: ${price} USDC.
-End time: ${date.toLocaleString()}
-cNFT Asset ID: ${assetId.toBase58()}
+      description: ` ${description} \n
+Current Price: ${price} USDC. \n
+Current Fee for bid ${configData.sellerFeeBasisPoints} USDC. \n
+End time: ${date.toLocaleString()} \n
+cNFT Asset ID: ${assetId.toBase58()} \n
 Links: ${links}`,
       label: "Place bid", // this value will be ignored since `links.actions` exists
       links: {
