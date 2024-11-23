@@ -11,6 +11,7 @@ import {
   ActionGetResponse,
   ActionPostRequest,
   createActionHeaders,
+  ActionError,
 } from "@solana/actions";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -110,15 +111,13 @@ export const POST = async (req: Request) => {
 
     const minValidBid = configData.sellerFeeBasisPoints + price;
     if (bidAmount < minValidBid) {
-      return new Response(
-        JSON.stringify({
-          msg: `bid amount is too low, minimum valid is: ${minValidBid} USDC`,
-        }),
-        {
-          status: 400,
-          headers,
-        }
-      );
+      const payload: ActionError = {
+        message: `bid amount is too low, minimum valid is: ${minValidBid} USDC`,
+      };
+      return Response.json(payload, {
+        status: 400,
+        headers,
+      });
     }
 
     const body: ActionPostRequest = await req.json();
