@@ -111,7 +111,9 @@ export const POST = async (req: Request) => {
     const minValidBid = configData.sellerFeeBasisPoints + price;
     if (bidAmount < minValidBid) {
       return new Response(
-        `bid amount is too low, minimum valid is: ${minValidBid} USDC`,
+        JSON.stringify({
+          msg: `bid amount is too low, minimum valid is: ${minValidBid} USDC`,
+        }),
         {
           status: 400,
           headers,
