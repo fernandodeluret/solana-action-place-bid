@@ -20,7 +20,10 @@ import {
 } from "@solana/spl-token";
 import { PublicKey, Transaction } from "@solana/web3.js";
 
-const headers = createActionHeaders();
+const headers = createActionHeaders({
+  chainId: "devnet",
+  actionVersion: "1.6.6",
+});
 
 export const GET = async (req: Request) => {
   try {
