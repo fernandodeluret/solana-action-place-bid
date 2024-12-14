@@ -33,6 +33,7 @@ export const GET = async (req: Request) => {
     const { price, endTime, assetId, auctionData } = await validateAuction(
       auction
     );
+
     const { connection, umi, configData } = await initialSetup();
     const { description, img, links } = await getMplData(
       connection,
