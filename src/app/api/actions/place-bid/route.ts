@@ -155,9 +155,12 @@ export const POST = async (req: Request) => {
       );
     }
 
+    const netBidAmount =
+      bidAmount * mintDecimals - configData.bidMinGapBasisPoints;
+
     const ix = await program.methods
       .placeBid({
-        bidPrice: new BN(bidAmount * mintDecimals),
+        bidPrice: new BN(netBidAmount),
       })
       .accountsStrict({
         auction,
