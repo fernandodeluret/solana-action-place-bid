@@ -56,7 +56,7 @@ export const GET = async (req: Request) => {
       icon: img ? img : placeholderImg,
       description: ` ${description} \n
 Current Price: ${price} USDC. \n
-Current Fee for bid ${configData.sellerFeeBasisPoints} USDC. \n
+Current Fee for bid ${configData.buyerFeeBasisPoints} USDC. \n
 End time: ${date.toLocaleString()} \n
 cNFT Asset ID: ${assetId.toBase58()} \n
 Links: ${links}`,
