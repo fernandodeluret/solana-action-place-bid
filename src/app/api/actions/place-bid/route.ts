@@ -114,7 +114,7 @@ export const POST = async (req: Request) => {
     } = await initialSetup();
 
     const minValidBid =
-      configData.sellerFeeBasisPoints +
+      configData.buyerFeeBasisPoints +
       price * (1 + configData.bidMinGapBasisPoints / 10_000);
     if (bidAmount < minValidBid) {
       const payload: ActionError = {
@@ -157,7 +157,7 @@ export const POST = async (req: Request) => {
     }
 
     const netBidAmount =
-      bidAmount * mintDecimals - configData.bidMinGapBasisPoints;
+      bidAmount * mintDecimals - configData.buyerFeeBasisPoints;
 
     const ix = await program.methods
       .placeBid({
